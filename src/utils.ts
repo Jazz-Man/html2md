@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 const rootDir = process.cwd();
 
-export const inputHtml = resolve(rootDir, "test.html");
+export const inputHtml = resolve(rootDir, "test-new.html");
 
 export const outputMd = resolve(rootDir, "test.md");
 
