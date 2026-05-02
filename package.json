@@ -18,5 +18,9 @@
 	},
 	"engines": {
 		"bun": ">=1.3.13"
+	},
+	"dependencies": {
+		"node-html-markdown": "2.0.0",
+		"trim-php": "2.0.0"
 	}
 }
