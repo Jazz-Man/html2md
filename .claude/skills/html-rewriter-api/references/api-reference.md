@@ -242,7 +242,11 @@ Async handlers **block the transformation** until they resolve. The parser waits
 
 ### Text Chunking
 
-A single text node may arrive as multiple `Text` chunks. Check `text.lastInTextNode` to know when a text node is complete. This matters when you need the full text content before transforming.
+A single text node **always** arrives as at least 2 `Text` chunks — even `<p>Hello World</p>` produces 2 calls (first with `lastInTextNode=false`, second with `lastInTextNode=true`). Long text may split into more. Always accumulate chunks until `lastInTextNode === true` before transforming.
+
+`text.text` contains **raw HTML entities** — `&amp;`, `&lt;`, `&gt;` are NOT decoded. You get the literal entity strings, not `& < >`.
+
+Empty elements like `<p></p>` trigger **zero** text handler invocations. `<p> </p>` (whitespace) triggers at least one invocation.
 
 ### Bun vs Cloudflare
 
@@ -258,7 +262,7 @@ Bun extends the Cloudflare Workers API by accepting `string`, `ArrayBuffer`, `Bl
 
 ### `removeAndKeepContent()` interaction with `onEndTag()` and `after()`
 
-After calling `element.removeAndKeepContent()`, behavior of `onEndTag()` and `element.after()` is undefined — the element's tags are stripped, so end-tag and after-tag positions may not fire or may produce unexpected output. Prefer `element.before()` + `removeAndKeepContent()` pattern (insert before opening tag, then strip tags).
+In Bun 1.3.13, both `onEndTag()` and `element.after()` still fire and produce correct output after `removeAndKeepContent()`. However, the safest cross-version pattern is `element.before()` + `removeAndKeepContent()` or `element.prepend()`/`element.append()` + `removeAndKeepContent()` — content inserted via `prepend`/`append` becomes part of the inner content and survives tag removal.
 
 ### `namespaceURI` values
 
