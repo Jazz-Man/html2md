@@ -1,0 +1,55 @@
+# This workflow will build and publish a package to GitHub Packages
+# For more information see: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry
+
+name: Publish to GitHub Packages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          registries: |
+              https://registry.npmjs.org/
+              @jazz-man:https://npm.pkg.github.com/|$GITHUB_TOKEN
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build binary
+        run: bun run build
+
+      - name: Run tests
+        run: bun test
+
+      - name: Bum new version
+        id: bump
+        run: |
+          COMMIT_HASH=${{ github.sha }}
+          COMMIT_SHORT=${COMMIT_HASH:0:7}
+          NEW_VERSION="1.0.0-run${{ github.run_number }}+${COMMIT_SHORT}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+
+      - name: Bump version and publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          npm version ${{ steps.bump.outputs.version }} --no-git-tag-version
+
+          bun publish \
+            --tolerate-republish \
+            --production
