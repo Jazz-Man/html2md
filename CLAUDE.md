@@ -36,3 +36,8 @@ bun test                     # Run tests (test root is ./tests/)
 - TypeScript strict mode with `noUncheckedIndexedAccess` and `noImplicitOverride` enabled.
 - `verbatimModuleSyntax` is on — use `import type` for type-only imports.
 - The `module` entry in package.json points to `src/index.ts` (no build step).
+
+## Workflow
+
+- Use the `lsp-code-analysis` skill for all code exploration, symbol lookup, and code analysis tasks
+- Use the `bun-test` skill when writing tests
