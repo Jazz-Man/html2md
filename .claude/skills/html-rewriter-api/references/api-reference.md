@@ -247,3 +247,25 @@ A single text node may arrive as multiple `Text` chunks. Check `text.lastInTextN
 ### Bun vs Cloudflare
 
 Bun extends the Cloudflare Workers API by accepting `string`, `ArrayBuffer`, `Blob`, and `Bun.BufferSource` as `transform()` inputs (Cloudflare only supports `Response`). Otherwise the API is compatible.
+
+---
+
+## Common Pitfalls (discovered via testing)
+
+### `comment.replace()` does NOT remove the original comment
+
+`replace()` on a `Comment` **prepends** content before the comment — it does not substitute. `<!-- old -->` with `.replace("new")` produces `new<!-- old -->`. To truly replace, call both `.replace("new")` and `.remove()`.
+
+### `removeAndKeepContent()` interaction with `onEndTag()` and `after()`
+
+After calling `element.removeAndKeepContent()`, behavior of `onEndTag()` and `element.after()` is undefined — the element's tags are stripped, so end-tag and after-tag positions may not fire or may produce unexpected output. Prefer `element.before()` + `removeAndKeepContent()` pattern (insert before opening tag, then strip tags).
+
+### `namespaceURI` values
+
+Regular HTML elements inside `<html>` report `namespaceURI` as `"http://www.w3.org/1999/xhtml"` — not an empty string. SVG elements get `"http://www.w3.org/2000/svg"`, MathML gets `"http://www.w3.org/1998/Math/MathML"`. Don't compare against `""` or `null`.
+
+### `ContentOptions` escaping in `DocumentEnd.append()` and other insertion methods
+
+All content insertion methods default to `{ html: false }`, which escapes `<`, `>`, `&`. This means `DocumentEnd.append("<!-- footer -->")` produces `&lt;!-- footer --&gt;` in output. Pass `{ html: true }` if inserting actual HTML markup.
+
+With `{ html: true }`, HTML entities in the inserted content round-trip: `&amp;` is parsed to `&` then re-serialized as `&amp;`.
